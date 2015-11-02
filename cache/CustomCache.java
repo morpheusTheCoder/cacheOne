@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
 import util.CustomValue;
-import cacheOne.CacheBehavior;
+import cacheOne.Comparator;
 
 public class CustomCache<K, V>  implements Cache<K, V>{
 	
@@ -26,66 +26,85 @@ public class CustomCache<K, V>  implements Cache<K, V>{
 	 * And we always delete the first element from the list.
 	 */
 	
-	private HashMap<K, CustomValue<V>> myHashMap = new HashMap<K, CustomValue<V>>();
-	private LinkedList<K> myList = new LinkedList<K>();
-	private CacheBehavior<K> myCacheBehavior = null;
+	
+	
+	/*
+	 * 
+	 LIST should have custom value and not key
+	 *
+	 */
+	
+	
+	private HashMap<K, CustomValue<K, V>> myHashMap = new HashMap<K, CustomValue<K, V>>();
+	private LinkedList<CustomValue<K, V>> myList = new LinkedList<CustomValue<K, V>>();
+	private Comparator myComparator = null;
 	private int capacity = 0;
 	
 	public CustomCache(){
 	}
 	
 	
-	public CustomCache(int capacity, CacheBehavior<K> myCacheBehavior){
-		this.myCacheBehavior = myCacheBehavior;
+	public CustomCache(int capacity, Comparator myCacheBehavior){
+		this.myComparator = myCacheBehavior;
 		this.capacity = capacity;
 		
 	}
 	
 	public V get(K key){
-		CustomValue<V> cValue =  myHashMap.get(key);
+		CustomValue<K, V> cValue =  myHashMap.get(key);
 		if( cValue == null)
 			return null;
 		
 		V value = cValue.data;
-
-		myCacheBehavior.get(myList,key);
+		cValue.accessTime = System.currentTimeMillis();
+		
+		if(myHashMap.size() == capacity){
+			if( myComparator.compare(cValue,  myList.get(0))){
+				myList.removeFirst();
+				myList.add(cValue);
+			}
+			else{
+				myList.remove(cValue);
+			}
+		}
+		
 		return value;
 	}
 	
 	
 	public void put(K key, V value){
 		
-		long creationTime = System.currentTimeMillis();
+		long creationTime = System.nanoTime();
 		long accessTime = creationTime;
-		CustomValue cValue = new CustomValue(value, creationTime, accessTime);
+		CustomValue cValue = new CustomValue(value, creationTime, accessTime, key);
 		
 		
-		myHashMap.put(key, value);
-		myList.add(key);
-		myCacheBehavior.put();
+
 		
 		if(myHashMap.size() > capacity){
-			K k1 = myList.removeFirst();
-			System.out.println("Removing..." + k1);
-			myHashMap.remove(k1);
+			
+			//if new entry needs to be added, then one entry has to be deleted.
+			if( myComparator.compare(cValue,  myList.get(0))){
+				
+				CustomValue one = myList.removeFirst();
+				myHashMap.remove(one.key);
+				
+				myList.add(cValue);
+				myHashMap.put(key, cValue);
+				
+			}
+
+		}
+		else{
+			myHashMap.put(key, cValue);
+			myList.add(cValue);
+
 		}
 		
 		
 	}
 	
 	
-	
-	@Override
-	public void insertAt(int i, K key){
-		myList.add(i, key);
-	}
-	
-	
-	
-	@Override
-	public void remove(K key){
-		myList.remove(key);
-	}
 	
 	
 	
@@ -94,8 +113,8 @@ public class CustomCache<K, V>  implements Cache<K, V>{
 		// TODO: Use a json library to convert this hashMap to json?
 		
 		String output = "";
-		for( K key : myList){
-			output += key.toString() + ", ";
+		for(CustomValue<K, V> cValue: myList){
+			output += cValue.data.toString() + ", ";
 		}
 
 		return output;

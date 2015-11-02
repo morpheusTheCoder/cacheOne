@@ -2,13 +2,24 @@
 
 import cache.Cache;
 import cache.CustomCache;
+import cacheOne.Comparator;
+import cacheOne.LRU;
+import cacheOne.MRU;
 
 public class DriverOne {
 
 	public static void main(String[] args) {
 		
-		CacheBehavior<String> LRU = new LRU();
-		Cache<String, String> myCache = new CustomCache<String, String>(3, LRU);
+		
+		// TODO: Fix off by one error with capacity
+		// TODO: more thorough testing. Add testcases.
+		
+		Comparator strategy = new MRU();
+		int capacity = 3;
+		
+		
+		Cache<String, String> myCache 
+			= new CustomCache<String, String>( capacity, strategy);
 		
 		
 		myCache.put("1", "One");
@@ -16,20 +27,9 @@ public class DriverOne {
 		myCache.put("3", "Three");
 		myCache.put("4", "Four");
 		myCache.put("5", "Five");
-		
-		
-		String t = myCache.get("1");
-		System.out.println(t);
+		myCache.put("6", "Six");
 
-		
-		print(myCache);
-		
-		
-	}
-
-	private static void print(Cache<String, String> myCache) {
 		System.out.println(myCache.toString());
-		
 	}
 
 }
