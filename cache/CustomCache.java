@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import util.CustomValue;
 import cacheOne.Comparator;
 
-public class CustomCache<K, V>  implements Cache<K, V>{
+public class CustomCache<K, V> {
 	
 	
 	/*
@@ -50,7 +50,7 @@ public class CustomCache<K, V>  implements Cache<K, V>{
 		
 	}
 	
-	public V get(K key){
+	protected V get(K key){
 		CustomValue<K, V> cValue =  myHashMap.get(key);
 		if( cValue == null)
 			return null;
@@ -72,7 +72,7 @@ public class CustomCache<K, V>  implements Cache<K, V>{
 	}
 	
 	
-	public void put(K key, V value){
+	protected void put(K key, V value){
 		
 		long creationTime = System.nanoTime();
 		long accessTime = creationTime;
